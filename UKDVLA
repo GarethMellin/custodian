@@ -1,0 +1,101 @@
+function UKDVLA() {
+    $api_key = 'DvlaSearchDemoAccount';
+    $reg1 = sanitize_text_field($_POST['Reg1']);
+    $reg2 = sanitize_text_field($_POST['Reg2']);
+    if ($reg1 == '')
+        $reg1 = 'MT09';
+    if ($reg2 == '')
+        $reg2 = 'ACT';
+    $reg = $reg1.$reg2;
+//https://dvlasearch.co.uk/dvla-api-documentation/
+//https://ukvehicledata.co.uk
+//https://dvlasearch.appspot.com/DvlaSearch?licencePlate=mt09nks&apikey=DvlaSearchDemoAccount
+//$url = "https://dvlasearch.appspot.com/DvlaSearch?licencePlate=MT09NKS&apikey=DvlaSearchDemoAccount";
+// Vehicle Details
+    $url = "https://dvlasearch.appspot.com/DvlaSearch?licencePlate=$reg&apikey=$api_key";
+    $api_response = wp_remote_get( $url );
+// Get the JSON object
+    $json = json_decode( wp_remote_retrieve_body( $api_response) );
+// Vehicle Value
+    $url2 = "https://dvlasearch.appspot.com/Valuation?licencePlate=$reg&apikey=$api_key";
+    $api_response2 = wp_remote_get( $url2 );
+// Get the JSON object
+    $json2 = json_decode( wp_remote_retrieve_body( $api_response2) );
+// Convert Reg To Plate Format AAAAA AAA
+    $put=" "; // put ' on position
+    $position=4; // number of characters (position)
+    $reg = putinplace($reg, $put, $position); //RESULT: AAAAA AAA
+
+ob_start();
+
+    foreach($json as $key => $value) {
+        $$key = $value;
+    }
+    //{"message":"No vehicle found","error":0}
+    if ($message == 'No vehicle found')
+        $reg = 'Not Issued';
+    echo '<div class="goutput-wrap" >';
+    echo '<div class="gimagewrap">';
+    echo '<div class="fgimage">';
+    echo '<img src="/wp-content/uploads/plate.png" alt="Reg Plate" />';
+    echo '<div class="fgee">'.$reg.'</div>';
+    echo '</div>'; // fg image
+    echo '</div>'; // end gee image
+    //echo '<br>';
+    //{"message":"No vehicle found","error":0}
+    if ($message != 'No vehicle found') {
+        echo '<div class="gimagewrap">';
+        echo '<b>Vehicle Details</b>';
+        echo '</div>'; // end gee image
+        echo 'Make :- ' . $make . '<br>';
+        echo 'Model :- ' . $model . '<br>';
+        echo 'VIN :- ' . $vin . '<br>';
+        echo 'F Reg :- ' . $dateOfFirstRegistration . '<br>';
+        echo 'Year :- ' . $yearOfManufacture . '<br>';
+        echo 'CC :- ' . $cylinderCapacity . '<br>';
+        echo 'CO2 :- ' . $co2Emissions . '<br>';
+        echo 'Fuel :- ' . $fuelType . '<br>';
+        echo 'Taxed :- ' . $taxStatus . '<br>';
+        echo 'Color :- ' . $colour . '<br>';
+        echo 'Type :- ' . $typeApproval . '<br>';
+        echo 'Wheel :- ' . $wheelPlan . '<br>';
+        echo 'Rev Wt :- ' . $revenueWeight . '<br>';
+        echo 'Tax :- ' . $taxDetails . '<br>';
+        if ($taxed = 1)
+            echo 'Taxed :- YES<br>';
+        else
+            echo 'Taxed :- NO<br>';
+        echo 'MOT :- ' . $motDetails . '<br>';
+        if ($mot = 1)
+            echo 'MOTD :- YES<br>';
+        else
+            echo 'MOTD :- NO<br>';
+        echo 'Trans :- ' . $transmission . '<br>';
+        echo 'Doors :- ' . $numberOfDoors . '<br>';
+        //echo 'Rate 6/M :- ' . $sixMonthRate . '<br>';
+        //echo 'Rate 12/M:- ' . $twelveMonthRate . '<br>';
+        echo '<br>';
+
+
+        foreach ($json2 as $key => $value) {
+            $$key = $value;
+        }
+        echo '<b>Vehicle Value</b><br>';
+        echo 'Description :- ' . $description . '<br>';
+        echo 'Value :- ' . $price . '<br>';
+        echo 'Imported :- ' . $imported . '<br>';
+        echo 'Body Type :- ' . $bodyType . '<br>';
+        echo 'Ins Group :- ' . $insuranceGroup . '<br>';
+        //echo 'Description :- ' . $description . '<br>';
+        echo 'Steering :- ' . $steering . '<br>';
+        echo 'Fuel :- ' . $fuel . '<br>';
+        echo '<br>';
+        echo '</div>'; // end out put wrap
+    }
+    die();
+
+    $result = ob_get_contents();
+    ob_end_clean();
+    return $result;
+
+}
